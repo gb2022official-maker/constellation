@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Constellation Grid Model (10×10)</title>
+  <style>
+    :root{
+      --bg0:#070A12;
+      --bg1:#0C1224;
+      --panel:#0F1A33cc;
+      --panel2:#101a2f;
+      --ink:#EAF0FF;
+      --muted:#B9C2E3;
+      --line:#27365f;
+
+      --a:#7CFFCB;
+      --b:#8AB4FF;
+      --c:#FF6AD5;
+      --d:#FFD36A;
+      --e:#B388FF;
+
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius2: 14px;
+
+      --cell: 72px;
+      --gap: 10px;
+      --gridBorder: 1px solid rgba(255,255,255,.08);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(124,255,203,.15), transparent 60%),
+        radial-gradient(900px 500px at 85% 20%, rgba(138,180,255,.18), transparent 55%),
+        radial-gradient(900px 700px at 45% 100%, rgba(255,106,213,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      min-height:100vh;
+    }
+
+    header{
+      padding:28px 20px 10px;
+      max-width: 1200px;
+      margin:0 auto;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .sigil{
+      width:44px; height:44px; border-radius:14px;
+      background: conic-gradient(from 220deg, var(--a), var(--b), var(--c), var(--d), var(--e), var(--a));
+      box-shadow: 0 10px 25px rgba(0,0,0,.35);
+      position:relative;
+      overflow:hidden;
+    }
+    .sigil:before{
+      content:"";
+      position:absolute; inset:2px;
+      border-radius:12px;
+      background: radial-gradient(16px 16px at 30% 25%, rgba(255,255,255,.55), transparent 60%),
+                  radial-gradient(22px 22px at 70% 70%, rgba(0,0,0,.35), transparent 60%),
+                  rgba(10,16,34,.65);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+
+    h1{
+      margin:0;
+      font-size: clamp(1.4rem, 2.2vw, 2.1rem);
+      letter-spacing:.2px;
+      line-height:1.15;
+    }
+    .subtitle{
+      margin:10px 0 0;
+      color:var(--muted);
+      max-width: 80ch;
+      line-height:1.45;
+      font-size: 0.98rem;
+    }
+
+    main{
+      max-width:1200px;
+      margin:0 auto;
+      padding: 12px 20px 40px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+      align-items:start;
+    }
+
+    @media (max-width: 980px){
+      .row{grid-template-columns: 1fr}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(15,26,51,.82), rgba(15,26,51,.55));
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .card .hd{
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      background: linear-gradient(90deg, rgba(124,255,203,.08), rgba(138,180,255,.06), rgba(255,106,213,.06));
+    }
+
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: .78rem;
+      color: var(--ink);
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      white-space:nowrap;
+    }
+
+    .card .bd{ padding: 16px; }
+
+    .gridTop{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 720px){
+      .gridTop{grid-template-columns: 1fr}
+    }
+
+    .topPreview{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(250px 110px at 30% 20%, rgba(255,211,106,.12), transparent 65%),
+        radial-gradient(260px 120px at 80% 60%, rgba(179,136,255,.12), transparent 65%),
+        rgba(0,0,0,.20);
+      overflow:hidden;
+      position:relative;
+      min-height: 260px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+    }
+    .topPreview img{
+      max-width:100%;
+      max-height: 360px;
+      object-fit:contain;
+      border-radius: 12px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+    }
+    .topPreview .placeholder{
+      text-align:center;
+      color: var(--muted);
+      line-height:1.4;
+      max-width: 46ch;
+    }
+    .sparkline{
+      position:absolute; inset:auto 12px 12px 12px;
+      display:flex; gap:8px; align-items:center; justify-content:space-between;
+      font-size:.78rem;
+      color: rgba(234,240,255,.82);
+    }
+    .sparkbar{
+      flex:1;
+      height:8px;
+      border-radius:999px;
+      background: rgba(255,255,255,.10);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .sparkbar > i{
+      display:block;
+      height:100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--a), var(--b), var(--c));
+    }
+
+    .controls label{
+      display:block;
+      color: var(--muted);
+      font-size: .85rem;
+      margin: 10px 0 6px;
+    }
+
+    input[type="text"], textarea, select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--ink);
+      outline:none;
+    }
+    textarea{ min-height: 88px; resize: vertical; }
+
+    input[type="file"]{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255,255,255,.22);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+    }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    button{
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(90deg, rgba(124,255,203,.16), rgba(138,180,255,.14), rgba(255,106,213,.14));
+      color: var(--ink);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 650;
+      letter-spacing:.2px;
+    }
+    button.secondary{
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      font-weight: 600;
+    }
+    button:active{ transform: translateY(1px); }
+
+    details{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      background: rgba(0,0,0,.10);
+    }
+    summary{
+      cursor:pointer;
+      list-style:none;
+      padding: 14px 16px;
+      user-select:none;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background: linear-gradient(90deg, rgba(255,211,106,.10), rgba(179,136,255,.08), rgba(138,180,255,.06));
+    }
+    summary::-webkit-details-marker{display:none}
+    summary .sumTitle{
+      font-weight: 750;
+      letter-spacing:.15px;
+    }
+    summary .sumMeta{
+      color: var(--muted);
+      font-size: .85rem;
+      white-space:nowrap;
+    }
+    .detailsBody{
+      padding: 14px 16px 16px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .gridWrap{
+      margin-top: 12px;
+      display:flex;
+      gap: 16px;
+      align-items:flex-start;
+    }
+    @media (max-width: 980px){
+      .gridWrap{ flex-direction:column; }
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(10, var(--cell));
+      gap: var(--gap);
+      padding: 14px;
+      border-radius: var(--radius2);
+      border: var(--gridBorder);
+      background:
+        radial-gradient(450px 250px at 20% 0%, rgba(124,255,203,.10), transparent 60%),
+        radial-gradient(520px 320px at 90% 30%, rgba(255,106,213,.09), transparent 60%),
+        rgba(0,0,0,.16);
+      overflow:auto;
+      max-width: 100%;
+    }
+    .cell{
+      width: var(--cell);
+      height: var(--cell);
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .12s ease;
+    }
+    .cell:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.22);
+    }
+    .cell img{
+      width:100%; height:100%;
+      object-fit: cover;
+      display:block;
+      filter: saturate(1.03) contrast(1.03);
+    }
+    .cell .idx{
+      position:absolute;
+      right:6px; bottom:6px;
+      font-size: .70rem;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.50);
+      border: 1px solid rgba(255,255,255,.16);
+      color: rgba(234,240,255,.92);
+    }
+    .cell .dot{
+      position:absolute;
+      left:8px; top:8px;
+      width:10px; height:10px; border-radius: 999px;
+      background: rgba(255,255,255,.20);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .cell[data-intensity="1"] .dot{ background: rgba(124,255,203,.55); }
+    .cell[data-intensity="2"] .dot{ background: rgba(138,180,255,.55); }
+    .cell[data-intensity="3"] .dot{ background: rgba(255,106,213,.55); }
+    .cell[data-intensity="4"] .dot{ background: rgba(255,211,106,.60); }
+    .cell[data-intensity="5"] .dot{ background: rgba(179,136,255,.60); }
+
+    .sidePanel{
+      flex: 1;
+      min-width: 280px;
+      max-width: 420px;
+      border-radius: var(--radius2);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+      padding: 12px;
+    }
+    .sidePanel h3{
+      margin: 8px 8px 6px;
+      font-size: 1.02rem;
+      letter-spacing:.15px;
+    }
+    .sidePanel p{
+      margin: 0 8px 10px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: .92rem;
+    }
+
+    .kv{
+      margin: 10px 8px 0;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .k{
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+    }
+    .k b{ display:block; font-size: .78rem; color: var(--muted); margin-bottom:6px; }
+    .k span{ font-weight: 800; letter-spacing:.2px; }
+
+    .footerNote{
+      margin-top: 16px;
+      color: rgba(234,240,255,.75);
+      font-size: .86rem;
+      line-height:1.45;
+    }
+    .codeBox{
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      overflow:auto;
+      max-height: 220px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size: .84rem;
+      color: rgba(234,240,255,.92);
+    }
+    .tiny{
+      font-size:.78rem;
+      color: rgba(234,240,255,.70);
+      margin: 10px 8px 0;
+      line-height:1.35;
+    }
+
+    a{ color: var(--b); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="brand">
+    <div class="sigil" aria-hidden="true"></div>
+    <div>
+      <h1>The Constellation Grid Model</h1>
+      <p class="subtitle">
+        One top image (the “star”), plus a 10×10 grid of supporting images (the “constellation”).
+        The grid amplifies, clarifies, and can eventually surpass the meaning of the top image.
+        Humans feel it through pattern recognition. Machines learn it through structured correlation.
+      </p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="row">
+    <!-- LEFT: Top Image + explanation -->
+    <section class="card" aria-label="Top image and concept">
+      <div class="hd">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="pill">⭐ Primary Image</span>
+          <span class="pill" style="border-color:rgba(124,255,203,.28)">Compression point</span>
+          <span class="pill" style="border-color:rgba(255,106,213,.26)">Meaning distilled</span>
+        </div>
+        <span class="pill" title="Quick instruction">Tip: click grid squares</span>
+      </div>
+
+      <div class="bd">
+        <div class="gridTop">
+          <div class="topPreview" id="topPreview">
+            <div class="placeholder" id="topPlaceholder">
+              <div style="font-weight:900;font-size:1.05rem;margin-bottom:6px">Drop in your “star.”</div>
+              <div>
+                Add an image URL or upload a file. This top image is the energy you want the grid to match and eventually surpass.
+              </div>
+            </div>
+            <img id="topImg" alt="" style="display:none" />
+            <div class="sparkline">
+              <span title="How strongly the grid aligns to the top image">Grid Resonance</span>
+              <div class="sparkbar" aria-hidden="true"><i id="resFill"></i></div>
+              <span id="resPct">0%</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <label for="topUrl">Top Image URL</label>
+            <input type="text" id="topUrl" placeholder="https://example.com/top-image.jpg" />
+
+            <label for="topFile">Or upload an image</label>
+            <input type="file" id="topFile" accept="image/*" />
+
+            <label for="topTitle">Concept Core (short title)</label>
+            <input type="text" id="topTitle" placeholder="Example: Sovereignty, Tender Brutality, Sacred Defiance…" />
+
+            <label for="topDesc">What does the top image mean (to you)?</label>
+            <textarea id="topDesc" placeholder="Keep it simple. The grid will do the heavy lifting."></textarea>
+
+            <div class="btnRow">
+              <button id="seedDemoBtn" type="button">Load Demo Constellation</button>
+              <button id="clearBtn" class="secondary" type="button">Clear Grid</button>
+              <button id="exportBtn" class="secondary" type="button">Export JSON</button>
+            </div>
+            <div class="tiny">
+              Demo uses lightweight SVG placeholders so it works anywhere. Replace them with real images whenever.
+            </div>
+          </div>
+        </div>
+
+        <div class="footerNote">
+          <b style="color:var(--d)">What you are doing:</b>
+          You are not “explaining” the star. You are surrounding it with 100 partial echoes so the mind completes the pattern.
+          Later, once the constellation becomes stronger than the original, you can replace the top image with a refined “star.”
+        </div>
+
+        <div class="codeBox" id="exportBox" aria-label="Exported JSON" style="display:none"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Glossary / machine-readable hints -->
+    <aside class="card" aria-label="How to use and what it teaches">
+      <div class="hd">
+        <span class="pill">🧠 Human + 🤖 Machine</span>
+        <span class="pill" style="border-color:rgba(255,211,106,.28)">Pattern density</span>
+      </div>
+      <div class="bd">
+        <h3>How humans “get it”</h3>
+        <p>
+          We understand beyond speech through repetition, variation, and placement.
+          The grid is a meaning field, a controlled swarm of symbols that makes the top image feel inevitable.
+        </p>
+
+        <h3>How machines learn it</h3>
+        <p>
+          Every square can store: image, short text, tags, and an intensity score.
+          That structured dataset becomes training material for correlation and clustering.
+        </p>
+
+        <div class="kv">
+          <div class="k"><b>Grid</b><span>10 × 10</span></div>
+          <div class="k"><b>Cells</b><span>100</span></div>
+          <div class="k"><b>Goal</b><span>Resonance</span></div>
+          <div class="k"><b>Outcome</b><span>Refined Star</span></div>
+        </div>
+
+        <p class="tiny" style="margin-top:12px">
+          Practical flow: set the top image, then fill cells with “echo images” and short captions.
+          Click a cell to edit it. Use Export JSON to save your constellation.
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <section style="margin-top:16px">
+    <details open>
+      <summary>
+        <span class="sumTitle">Open the Constellation Grid (10×10)</span>
+        <span class="sumMeta" id="gridMeta">0 / 100 filled</span>
+      </summary>
+      <div class="detailsBody">
+        <div class="gridWrap">
+          <div class="grid" id="grid" aria-label="10 by 10 grid"></div>
+
+          <div class="sidePanel" aria-label="Cell editor">
+            <h3>Cell Editor</h3>
+            <p>
+              Click any square to edit it. Each cell is an “echo” of the top image.
+              The stronger the echoes, the higher the resonance.
+            </p>
+
+            <label for="cellIndex" style="display:block;color:var(--muted);font-size:.85rem;margin:10px 8px 6px;">Selected Cell</label>
+            <input type="text" id="cellIndex" value="None" disabled style="margin:0 8px" />
+
+            <label for="cellUrl" style="display:block;color:var(--muted);font-size:.85rem;margin:10px 8px 6px;">Image URL</label>
+            <input type="text" id="cellUrl" placeholder="https://example.com/echo.jpg" style="margin:0 8px" />
+
+            <label for="cellText" style="display:block;color:var(--muted);font-size:.85rem;margin:10px 8px 6px;">Caption (short)</label>
+            <textarea id="cellText" placeholder="What aspect of the core does this echo?" style="margin:0 8px"></textarea>
+
+            <label for="cellTags" style="display:block;color:var(--muted);font-size:.85rem;margin:10px 8px 6px;">Tags (comma-separated)</label>
+            <input type="text" id="cellTags" placeholder="tone: defiant, motif: crown, color: gold" style="margin:0 8px" />
+
+            <label for="cellIntensity" style="display:block;color:var(--muted);font-size:.85rem;margin:10px 8px 6px;">
+              Intensity (1 low → 5 high)
+            </label>
+            <select id="cellIntensity" style="margin:0 8px">
+              <option value="1">1 (soft echo)</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5 (strong echo)</option>
+            </select>
+
+            <div class="btnRow" style="padding: 0 8px">
+              <button id="saveCellBtn" type="button">Save Cell</button>
+              <button id="clearCellBtn" class="secondary" type="button">Clear Cell</button>
+            </div>
+
+            <div class="tiny">
+              “Intensity” is a simple numeric signal for machines: how strongly this cell aligns with the top image’s energy.
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </section>
+</main>
+
+<script>
+  // ---------- Helpers ----------
+  const $ = (id) => document.getElementById(id);
+
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+  // Lightweight placeholder images (SVG data URIs).
+  // Each color is a different "energy" vibe. No external dependencies.
+  function svgDataUri(label, c1, c2){
+    const svg =
+`<svg xmlns="http://www.w3.org/2000/svg" width="420" height="420">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${c1}" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="${c2}" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="r" cx="30%" cy="25%" r="70%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" rx="34" fill="url(#g)"/>
+  <rect width="100%" height="100%" rx="34" fill="url(#r)"/>
+  <g filter="url(#s)">
+    <path d="M70 250 C140 120, 280 120, 350 250" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="210" cy="190" r="44" fill="rgba(0,0,0,0.18)" stroke="rgba(255,255,255,0.55)" stroke-width="6"/>
+    <path d="M150 280 L270 280" stroke="rgba(0,0,0,0.18)" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="50%" y="72%" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="26" fill="rgba(255,255,255,0.92)" style="font-weight:800;letter-spacing:.5px">${label}</text>
+  <text x="50%" y="80%" text-anchor="middle" font-family="ui-sans-serif,system-ui" font-size="14" fill="rgba(255,255,255,0.70)" style="font-weight:650;letter-spacing:.6px">echo image placeholder</text>
+</svg>`;
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
+  // ---------- Model State ----------
+  const SIZE = 10;
+  const TOTAL = SIZE * SIZE;
+
+  const state = {
+    top: {
+      url: "",
+      title: "",
+      desc: ""
+    },
+    cells: Array.from({length: TOTAL}, () => ({
+      url: "",
+      text: "",
+      tags: "",
+      intensity: "3"
+    })),
+    selected: -1
+  };
+
+  // ---------- UI: Top Image ----------
+  function setTopImage(src){
+    const img = $("topImg");
+    const placeholder = $("topPlaceholder");
+
+    if (!src){
+      img.style.display = "none";
+      img.removeAttribute("src");
+      placeholder.style.display = "block";
+      return;
+    }
+    img.src = src;
+    img.alt = state.top.title ? state.top.title : "Top image";
+    img.style.display = "block";
+    placeholder.style.display = "none";
+  }
+
+  $("topUrl").addEventListener("input", (e) => {
+    state.top.url = e.target.value.trim();
+    setTopImage(state.top.url);
+  });
+
+  $("topFile").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    state.top.url = url;
+    $("topUrl").value = "";
+    setTopImage(url);
+  });
+
+  $("topTitle").addEventListener("input", (e) => state.top.title = e.target.value);
+  $("topDesc").addEventListener("input", (e) => state.top.desc = e.target.value);
+
+  // ---------- UI: Grid ----------
+  function buildGrid(){
+    const grid = $("grid");
+    grid.innerHTML = "";
+
+    for (let i = 0; i < TOTAL; i++){
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.index = String(i);
+      cell.dataset.intensity = state.cells[i].intensity || "3";
+
+      // dot + index
+      const dot = document.createElement("div");
+      dot.className = "dot";
+      cell.appendChild(dot);
+
+      const idx = document.createElement("div");
+      idx.className = "idx";
+      idx.textContent = String(i+1).padStart(2,"0");
+      cell.appendChild(idx);
+
+      // image if any
+      const c = state.cells[i];
+      if (c.url){
+        const img = document.createElement("img");
+        img.src = c.url;
+        img.alt = c.text ? c.text : `Cell ${i+1}`;
+        cell.insertBefore(img, dot);
+      }
+
+      cell.addEventListener("click", () => selectCell(i));
+      grid.appendChild(cell);
+    }
+    updateStats();
+  }
+
+  function selectCell(i){
+    state.selected = i;
+    const c = state.cells[i];
+
+    $("cellIndex").value = `#${String(i+1).padStart(2,"0")} (row ${Math.floor(i/SIZE)+1}, col ${(i%SIZE)+1})`;
+    $("cellUrl").value = c.url;
+    $("cellText").value = c.text;
+    $("cellTags").value = c.tags;
+    $("cellIntensity").value = c.intensity || "3";
+  }
+
+  function saveSelectedCell(){
+    const i = state.selected;
+    if (i < 0) return;
+
+    const url = $("cellUrl").value.trim();
+    const text = $("cellText").value.trim();
+    const tags = $("cellTags").value.trim();
+    const intensity = $("cellIntensity").value;
+
+    state.cells[i] = { url, text, tags, intensity };
+    buildGrid();
+    selectCell(i);
+  }
+
+  function clearSelectedCell(){
+    const i = state.selected;
+    if (i < 0) return;
+    state.cells[i] = { url:"", text:"", tags:"", intensity:"3" };
+    buildGrid();
+    selectCell(i);
+  }
+
+  $("saveCellBtn").addEventListener("click", saveSelectedCell);
+  $("clearCellBtn").addEventListener("click", clearSelectedCell);
+
+  // ---------- Stats / Resonance ----------
+  function updateStats(){
+    const filled = state.cells.filter(c => !!c.url).length;
+    $("gridMeta").textContent = `${filled} / ${TOTAL} filled`;
+
+    // Resonance score: simple heuristic combining fill ratio and intensity average.
+    // This is illustrative, not "truth". You can replace with your own scoring later.
+    let intensitySum = 0;
+    let count = 0;
+    for (const c of state.cells){
+      if (!c.url) continue;
+      intensitySum += Number(c.intensity || 3);
+      count++;
+    }
+    const fillRatio = filled / TOTAL;              // 0..1
+    const intensityAvg = count ? (intensitySum / count) : 0; // 0..5
+    const intensityNorm = intensityAvg / 5;        // 0..1
+
+    const resonance = clamp(Math.round((fillRatio * 0.65 + intensityNorm * 0.35) * 100), 0, 100);
+
+    $("resPct").textContent = `${resonance}%`;
+    $("resFill").style.width = `${resonance}%`;
+  }
+
+  // ---------- Demo / Clear ----------
+  function clearAll(){
+    state.top = { url:"", title:"", desc:"" };
+    $("topUrl").value = "";
+    $("topFile").value = "";
+    $("topTitle").value = "";
+    $("topDesc").value = "";
+    setTopImage("");
+
+    state.cells = Array.from({length: TOTAL}, () => ({ url:"", text:"", tags:"", intensity:"3" }));
+    state.selected = -1;
+    $("cellIndex").value = "None";
+    $("cellUrl").value = "";
+    $("cellText").value = "";
+    $("cellTags").value = "";
+    $("cellIntensity").value = "3";
+
+    $("exportBox").style.display = "none";
+    $("exportBox").textContent = "";
+
+    buildGrid();
+  }
+
+  $("clearBtn").addEventListener("click", clearAll);
+
+  function seedDemo(){
+    // Top image demo
+    const top = svgDataUri("TOP: The Star", "#7CFFCB", "#8AB4FF");
+    state.top.url = top;
+    state.top.title = "The Star (Primary Vision)";
+    state.top.desc = "This is the compressed core. The grid beneath is 100 echoes that teach the eye what this means.";
+    $("topTitle").value = state.top.title;
+    $("topDesc").value = state.top.desc;
+    setTopImage(top);
+
+    // A few themed placeholders across the grid to demonstrate “energy”
+    const palette = [
+      ["Echo: Tone", "#8AB4FF", "#B388FF"],
+      ["Echo: Motif", "#FF6AD5", "#8AB4FF"],
+      ["Echo: Principle", "#FFD36A", "#FF6AD5"],
+      ["Echo: Archetype", "#7CFFCB", "#FFD36A"],
+      ["Echo: Ritual", "#B388FF", "#7CFFCB"]
+    ];
+
+    const captions = [
+      "Softens the idea into a human doorway.",
+      "Pushes the motif louder without explaining it.",
+      "Same message, different costume.",
+      "An archetype echo: posture and power.",
+      "Ritual echo: repeated pattern builds inevitability."
+    ];
+
+    // Sprinkle 25 demo cells
+    const indices = [
+      0,1,2,3,4,  10,12,14,16,18,
+      22,24,26,28,  40,41,42,43,
+      55,56,57,  77,78,  99
+    ];
+
+    indices.forEach((i, k) => {
+      const p = palette[k % palette.length];
+      const label = p[0];
+      state.cells[i] = {
+        url: svgDataUri(label, p[1], p[2]),
+        text: captions[k % captions.length],
+        tags: "alignment:echo, mode:visual, field:constellation",
+        intensity: String((k % 5) + 1)
+      };
+    });
+
+    buildGrid();
+  }
+
+  $("seedDemoBtn").addEventListener("click", seedDemo);
+
+  // ---------- Export ----------
+  function exportJSON(){
+    const payload = {
+      model: "ConstellationGridModel",
+      version: "1.0",
+      top: {
+        url: state.top.url,
+        title: state.top.title,
+        desc: state.top.desc
+      },
+      grid: {
+        rows: SIZE,
+        cols: SIZE,
+        cells: state.cells.map((c, idx) => ({
+          index: idx + 1,
+          row: Math.floor(idx / SIZE) + 1,
+          col: (idx % SIZE) + 1,
+          image_url: c.url,
+          caption: c.text,
+          tags: c.tags,
+          intensity: Number(c.intensity || 3)
+        }))
+      }
+    };
+
+    const box = $("exportBox");
+    box.style.display = "block";
+    box.textContent = JSON.stringify(payload, null, 2);
+    box.scrollTop = 0;
+  }
+
+  $("exportBtn").addEventListener("click", exportJSON);
+
+  // ---------- Init ----------
+  buildGrid();
+  setTopImage("");
+</script>
+</body>
+</html>
